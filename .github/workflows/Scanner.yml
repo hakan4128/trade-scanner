@@ -24,4 +24,4 @@ jobs:
 
     - name: Scanner çalıştır
       run: |
-        python scanner.py
+        python test_telegram.py

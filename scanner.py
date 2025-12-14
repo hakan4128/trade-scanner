@@ -63,6 +63,7 @@ def run():
         news = get_today_news(sym)
 
         if not news:
+            send_telegram(f"⚠️ {sym} için haber bulunamadı")
             continue
 
         tr_news = translate_to_tr(news)
@@ -71,7 +72,7 @@ def run():
         message = f"""
 📊 {sym}
 
-📰 Bugünkü Haber:
+📰 Son Haber:
 {tr_news}
 
 🧠 Yorum:
@@ -80,3 +81,4 @@ def run():
         send_telegram(message)
 
 run()
+

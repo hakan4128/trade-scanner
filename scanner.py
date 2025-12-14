@@ -1,30 +1,86 @@
 import requests
 import datetime
+import os
+import xml.etree.ElementTree as ET
 
-# === AYARLAR ===
-BOT_TOKEN = "BURAYA_BOT_TOKEN"
-CHAT_ID = "BURAYA_CHAT_ID"
+# Telegram bilgileri (Secrets'ten gelir)
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 
-# Basit örnek hisse listesi (şimdilik)
-WATCHLIST = ["NVDA", "TSLA", "AAPL"]
+# Takip edilecek hisseler (şimdilik manuel)
+SYMBOLS = ["NVDA", "TSLA", "AAPL"]
 
-def send_telegram(message):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": CHAT_ID,
-        "text": message
+def get_today_news(symbol):
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    url = f"https://news.google.com/rss/search?q={symbol}+stock&hl=en-US&gl=US&ceid=US:en"
+
+    r = requests.get(url)
+    root = ET.fromstring(r.content)
+
+    for item in root.iter("item"):
+        title = item.find("title").text
+        pub_date = item.find("pubDate").text
+
+        if today in pub_date:
+            return title
+
+    return None
+
+def translate_to_tr(text):
+    url = "https://translate.googleapis.com/translate_a/single"
+    params = {
+        "client": "gtx",
+        "sl": "en",
+        "tl": "tr",
+        "dt": "t",
+        "q": text
     }
-    requests.post(url, data=payload)
+    r = requests.get(url, params=params)
+    return r.json()[0][0][0]
 
-def run_scanner():
-    now = datetime.datetime.now().strftime("%H:%M")
-    msg = "📊 A+ Scanner Çalıştı\n"
-    msg += f"⏰ Saat: {now}\n\n"
+def analyze_news(text):
+    negative = ["offering", "dilution", "investigation", "lawsuit"]
+    fake = ["reddit", "social media", "short squeeze"]
 
-    for symbol in WATCHLIST:
-        msg += f"• {symbol} → İzleniyor\n"
+    t = text.lower()
 
-    send_telegram(msg)
+    for w in negative:
+        if w in t:
+            return "🔴 Negatif / Riskli"
 
-if __name__ == "__main__":
-    run_scanner()
+    for w in fake:
+        if w in t:
+            return "⚠️ Fake Pump Riski"
+
+    return "🟢 Pozitif / Gerçek Katalist"
+
+def send_telegram(msg):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    data = {
+        "chat_id": CHAT_ID,
+        "text": msg
+    }
+    requests.post(url, json=data)
+
+def run():
+    for sym in SYMBOLS:
+        news = get_today_news(sym)
+
+        if not news:
+            continue
+
+        tr_news = translate_to_tr(news)
+        analysis = analyze_news(news)
+
+        message = f"""
+📊 {sym}
+
+📰 Bugünkü Haber:
+{tr_news}
+
+🧠 Yorum:
+{analysis}
+"""
+        send_telegram(message)
+
+run()

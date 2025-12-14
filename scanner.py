@@ -1,3 +1,4 @@
+print("### NEW VERSION V2 ###")
 import requests
 import os
 import xml.etree.ElementTree as ET
@@ -72,7 +73,7 @@ def run():
 
 ⭐ Skor: {score}/100
 """
-        send_telegram(msg)
+         send_telegram("🆕 YENİ A/A+ SÜRÜMÜ ÇALIŞIYOR")
 
 run()
 # temp

@@ -82,3 +82,4 @@ def run():
 
 run()
 
+send_telegram("🚨 scanner.py çalıştı")

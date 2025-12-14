@@ -50,6 +50,30 @@ def analyze_news(text):
 
     return "🟢 Pozitif / Gerçek Katalist"
 
+def score_news(text):
+    score = 0
+    t = text.lower()
+
+    positive = ["beats", "record", "strong", "growth", "surge"]
+    negative = ["offering", "dilution", "investigation", "lawsuit"]
+    fake = ["reddit", "social media", "short squeeze"]
+
+    for w in positive:
+        if w in t:
+            score += 30
+            break
+
+    if not any(w in t for w in negative):
+        score += 20
+
+    if not any(w in t for w in fake):
+        score += 30
+
+    if "breakout" in t or "high" in t:
+        score += 20
+
+    return score
+
 def send_telegram(msg):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     data = {
@@ -68,16 +92,29 @@ def run():
 
         tr_news = translate_to_tr(news)
         analysis = analyze_news(news)
+        score = score_news(news)
+
+        if score >= 80:
+            grade = "A+"
+        elif score >= 65:
+            grade = "A"
+        else:
+            grade = "İzleme Dışı"
 
         message = f"""
-📊 {sym}
+📊 {sym} — {grade}
 
-📰 Son Haber:
+📰 Haber:
 {tr_news}
 
 🧠 Yorum:
 {analysis}
+
+⭐ Skor: {score}/100
 """
+        send_telegram(message)
+
+run()
         send_telegram(message)
 run()
 send_telegram("🚨 scanner.py çalıştı")

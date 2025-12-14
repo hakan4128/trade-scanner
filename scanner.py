@@ -11,6 +11,18 @@ def send_telegram(msg):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     requests.post(url, json={"chat_id": CHAT_ID, "text": msg})
 
+def translate_tr(text):
+    url = "https://translate.googleapis.com/translate_a/single"
+    params = {
+        "client": "gtx",
+        "sl": "en",
+        "tl": "tr",
+        "dt": "t",
+        "q": text
+    }
+    r = requests.get(url, params=params)
+    return r.json()[0][0][0]
+
 def get_news(symbol):
     url = f"https://news.google.com/rss/search?q={symbol}+stock&hl=en-US&gl=US&ceid=US:en"
     r = requests.get(url)
@@ -50,6 +62,8 @@ def run():
     for sym in SYMBOLS:
         news = get_news(sym)
 
+news_tr = translate_tr(news)
+
         if not news:
             send_telegram(f"⚠️ {sym}: haber yok")
             continue
@@ -60,10 +74,7 @@ def run():
 📊 {sym} — {grade}
 
 📰 Haber:
-{news}
+{news_tr}
 
 ⭐ Skor: {score}/100
 """
-        send_telegram(msg)
-
-run()

@@ -11,7 +11,6 @@ CHAT_ID = os.getenv("CHAT_ID")
 SYMBOLS = ["NVDA", "TSLA", "AAPL"]
 
 def get_today_news(symbol):
-    today = datetime.date.today().strftime("%Y-%m-%d")
     url = f"https://news.google.com/rss/search?q={symbol}+stock&hl=en-US&gl=US&ceid=US:en"
 
     r = requests.get(url)
@@ -19,10 +18,7 @@ def get_today_news(symbol):
 
     for item in root.iter("item"):
         title = item.find("title").text
-        pub_date = item.find("pubDate").text
-
-        if today in pub_date:
-            return title
+        return title  # ilk haberi al
 
     return None
 
